@@ -2,16 +2,18 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Por Si Mañana No Estoy — Omar Courtz</title>
 <style>
   * { box-sizing: border-box; }
   html, body {
     margin: 0;
     height: 100%;
+    height: 100dvh; /* evita el salto con la barra del navegador en móvil */
     font-family: Arial, sans-serif;
     color: #fff;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Fondo a pantalla completa */
@@ -32,12 +34,16 @@
 
   .container {
     height: 100%;
+    height: 100dvh;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 
   h1 {
@@ -52,16 +58,19 @@
   }
 
   #playButton {
-    padding: 18px 40px;
+    padding: clamp(14px, 4vw, 18px) clamp(28px, 8vw, 40px);
     border: none;
     border-radius: 50px;
     background: #1DB954;
     color: #fff;
-    font-size: 18px;
+    font-size: clamp(16px, 4.5vw, 18px);
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     transition: transform .15s ease, background .15s ease;
+    max-width: 90vw;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
   }
   #playButton:hover { background: #1ed760; transform: scale(1.03); }
   #playButton:active { transform: scale(0.97); }
