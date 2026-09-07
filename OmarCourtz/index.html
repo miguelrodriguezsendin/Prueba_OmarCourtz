@@ -75,7 +75,8 @@
   }
   #playButton:hover { background: #1ed760; transform: scale(1.03); }
   #playButton:active { transform: scale(0.97); }
-  #playButton.hidden { display: none; }
+  #playButton { display: none; } /* oculto por defecto: solo aparece si el navegador bloquea el autoplay */
+  #playButton.shown { display: inline-block; }
 
   /* El reproductor de SoundCloud se muestra pequeño abajo, solo tras dar play */
   #embed-wrap {
@@ -110,7 +111,7 @@
     <h1>POR SI MAÑANA NO ESTOY</h1>
     <p class="subtitle">Omar Courtz · empieza en 1:20</p>
 
-    <button id="playButton">▶ Reproducir</button>
+    <button id="playButton">▶ Toca para reproducir</button>
 
     <p id="fallback" style="display:none;">
       ¿No suena? <a id="fallbackLink" href="https://soundcloud.com/omar-courtz/por-si-manana-no-estoy" target="_blank" rel="noopener">Ábrela en SoundCloud</a>
@@ -134,15 +135,38 @@
 
   let widget = null;
   let widgetReady = false;
+  let started = false;
 
   const iframeEl = document.getElementById('sc-widget');
   widget = SC.Widget(iframeEl);
-  widget.bind(SC.Widget.Events.READY, () => { widgetReady = true; });
 
-  // Si el widget no se confirma "listo" en unos segundos (bloqueado, sin red...),
-  // mostramos el enlace de respaldo.
+  widget.bind(SC.Widget.Events.PLAY, () => {
+    // el audio realmente empezó a sonar: aseguramos que el botón quede oculto
+    started = true;
+    document.getElementById('playButton').classList.remove('shown');
+    document.getElementById('embed-wrap').classList.add('visible');
+  });
+
+  widget.bind(SC.Widget.Events.READY, () => {
+    widgetReady = true;
+    widget.seekTo(START_MS);
+    widget.play(); // intento automático; si el navegador lo bloquea, no pasará nada y mostraremos el botón
+
+    // si en 1.5s no ha empezado a sonar de verdad, es que el navegador bloqueó el autoplay
+    setTimeout(() => {
+      if (!started) {
+        document.getElementById('playButton').classList.add('shown');
+      }
+    }, 1500);
+  });
+
+  // Si el widget de SoundCloud ni siquiera confirma "listo" (bloqueado, sin red...),
+  // mostramos directamente el enlace de respaldo.
   setTimeout(() => {
-    if (!widgetReady) mostrarFallback();
+    if (!widgetReady) {
+      mostrarFallback();
+      document.getElementById('playButton').classList.add('shown');
+    }
   }, 5000);
 
   function mostrarFallback() {
@@ -157,8 +181,7 @@
     }
     widget.seekTo(START_MS);
     widget.play();
-
-    document.getElementById('playButton').classList.add('hidden');
+    document.getElementById('playButton').classList.remove('shown');
     document.getElementById('embed-wrap').classList.add('visible');
   });
 </script>
