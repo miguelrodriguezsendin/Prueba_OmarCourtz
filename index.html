@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Por Si Mañana No Estoy — 1:20</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: #aaa;
+      margin-bottom: 25px;
+    }
+
+    #embed-iframe {
+      width: 100%;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      background: #1DB954;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1ed760;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>POR SI MAÑANA NO ESTOY</h1>
+    <p>Omar Courtz · empieza en 1:20</p>
+
+    <div id="embed-iframe"></div>
+
+    <button id="playButton">
+      ▶ Escuchar desde 1:20
+    </button>
+
+  </div>
+
+
+  <!-- Spotify iFrame API -->
+  <script src="https://open.spotify.com/embed/iframe-api/v1"></script>
+
+  <script>
+
+    let EmbedController;
+
+    window.onSpotifyIframeApiReady = (IFrameAPI) => {
+
+      const element = document.getElementById('embed-iframe');
+
+      const options = {
+        width: '100%',
+        height: 152,
+
+        // POR SI MAÑANA NO ESTOY - Omar Courtz
+        uri: 'spotify:track:5FIvygEAeCSTFO6lY3Cda0'
+      };
+
+      const callback = (controller) => {
+
+        EmbedController = controller;
+
+        document
+          .getElementById('playButton')
+          .addEventListener('click', () => {
+
+            // 80 segundos = 1:20
+            EmbedController.loadEntity(
+              'spotify:track:5FIvygEAeCSTFO6lY3Cda0',
+              false,
+              80
+            );
+
+            EmbedController.play();
+
+          });
+
+      };
+
+      IFrameAPI.createController(
+        element,
+        options,
+        callback
+      );
+
+    };
+
+  </script>
+
+</body>
+</html>
