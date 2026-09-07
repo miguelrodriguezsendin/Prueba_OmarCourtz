@@ -58,27 +58,7 @@
     text-shadow: 0 1px 6px rgba(0,0,0,0.7);
   }
 
-  #playButton {
-    padding: clamp(14px, 4vw, 18px) clamp(28px, 8vw, 40px);
-    border: none;
-    border-radius: 50px;
-    background: #1DB954;
-    color: #fff;
-    font-size: clamp(16px, 4.5vw, 18px);
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    transition: transform .15s ease, background .15s ease;
-    max-width: 90vw;
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #playButton:hover { background: #1ed760; transform: scale(1.03); }
-  #playButton:active { transform: scale(0.97); }
-  #playButton { display: none; } /* oculto por defecto: solo aparece si el navegador bloquea el autoplay */
-  #playButton.shown { display: inline-block; }
-
-  /* El reproductor de SoundCloud se muestra pequeño abajo, solo tras dar play */
+  /* El reproductor de SoundCloud se muestra pequeño abajo en cuanto suena */
   #embed-wrap {
     position: fixed;
     left: 0;
@@ -93,14 +73,6 @@
   }
   #embed-wrap.visible { transform: translateY(0); }
   #embed-iframe { width: 100%; max-width: 500px; margin: 0 auto; }
-
-  #fallback {
-    margin-top: 22px;
-    font-size: 14px;
-    color: #ccc;
-    max-width: 320px;
-  }
-  #fallback a { color: #1ed760; }
 </style>
 </head>
 <body>
@@ -110,13 +82,6 @@
   <div class="container">
     <h1>POR SI MAÑANA NO ESTOY</h1>
     <p class="subtitle">Omar Courtz · empieza en 1:20</p>
-
-    <button id="playButton">▶ Toca para reproducir</button>
-
-    <p id="fallback" style="display:none;">
-      ¿No suena? <a id="fallbackLink" href="https://soundcloud.com/omar-courtz/por-si-manana-no-estoy" target="_blank" rel="noopener">Ábrela en SoundCloud</a>
-      (tendrás que adelantar manualmente hasta 1:20)
-    </p>
   </div>
 
   <div id="embed-wrap">
@@ -135,55 +100,25 @@
 
   let widget = null;
   let widgetReady = false;
-  let started = false;
 
   const iframeEl = document.getElementById('sc-widget');
   widget = SC.Widget(iframeEl);
 
   widget.bind(SC.Widget.Events.PLAY, () => {
-    // el audio realmente empezó a sonar: aseguramos que el botón quede oculto
-    started = true;
-    document.getElementById('playButton').classList.remove('shown');
     document.getElementById('embed-wrap').classList.add('visible');
   });
 
   widget.bind(SC.Widget.Events.READY, () => {
     widgetReady = true;
     widget.seekTo(START_MS);
-    widget.play(); // intento automático; si el navegador lo bloquea, no pasará nada y mostraremos el botón
-
-    // si en 1.5s no ha empezado a sonar de verdad, es que el navegador bloqueó el autoplay
-    setTimeout(() => {
-      if (!started) {
-        document.getElementById('playButton').classList.add('shown');
-      }
-    }, 1500);
+    widget.play();
   });
 
   // Si el widget de SoundCloud ni siquiera confirma "listo" (bloqueado, sin red...),
-  // mostramos directamente el enlace de respaldo.
+  // abrimos la canción directamente en SoundCloud como último recurso.
   setTimeout(() => {
-    if (!widgetReady) {
-      mostrarFallback();
-      document.getElementById('playButton').classList.add('shown');
-    }
+    if (!widgetReady) window.open(TRACK_URL, '_blank');
   }, 5000);
-
-  function mostrarFallback() {
-    document.getElementById('fallback').style.display = 'block';
-  }
-
-  document.getElementById('playButton').addEventListener('click', () => {
-    if (!widgetReady) {
-      mostrarFallback();
-      window.open(TRACK_URL, '_blank');
-      return;
-    }
-    widget.seekTo(START_MS);
-    widget.play();
-    document.getElementById('playButton').classList.remove('shown');
-    document.getElementById('embed-wrap').classList.add('visible');
-  });
 </script>
 </body>
 </html>
