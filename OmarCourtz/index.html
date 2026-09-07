@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Por Si Mañana No Estoy — Omar Courtz</title>
 <style>
   * { box-sizing: border-box; }
@@ -10,6 +10,7 @@
     margin: 0;
     height: 100%;
     height: 100dvh; /* evita el salto con la barra del navegador en móvil */
+    background: #000; /* si queda algún hueco, que sea negro y no blanco */
     font-family: Arial, sans-serif;
     color: #fff;
     overflow: hidden;
@@ -83,6 +84,7 @@
     right: 0;
     bottom: 0;
     padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
     background: rgba(0,0,0,0.55);
     backdrop-filter: blur(6px);
     transform: translateY(100%);
@@ -95,6 +97,7 @@
     margin-top: 22px;
     font-size: 14px;
     color: #ccc;
+    max-width: 320px;
   }
   #fallback a { color: #1ed760; }
 </style>
@@ -155,12 +158,17 @@
       window.open(TRACK_URL, '_blank');
       return;
     }
+    // loadUri admite opciones con la posición inicial exacta en ms,
+    // así no dependemos de esperar "a ojo" a que cargue el track.
     EmbedController.loadUri(TRACK_URI);
-    // pequeño margen para que cargue antes de buscar la posición
-    setTimeout(() => {
-      EmbedController.seek(START_MS);
-      EmbedController.play();
-    }, 600);
+    EmbedController.addListener('playback_update', function onUpdate(e) {
+      // en cuanto el reproductor confirma que hay datos cargados, buscamos y reproducimos
+      if (e.data.duration > 0) {
+        EmbedController.removeListener('playback_update', onUpdate);
+        EmbedController.seek(START_MS);
+        EmbedController.play();
+      }
+    });
 
     document.getElementById('playButton').classList.add('hidden');
     document.getElementById('embed-wrap').classList.add('visible');
