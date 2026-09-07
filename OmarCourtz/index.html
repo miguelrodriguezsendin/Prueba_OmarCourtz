@@ -19,7 +19,7 @@
   .bg {
     position: fixed;
     inset: 0;
-    background-image: url('fondo.jpg'); /* <-- sube tu imagen con este nombre */
+    background-image: url('fondo.jpg'); 
     background-size: cover;
     background-position: center;
     z-index: -2;
@@ -87,7 +87,7 @@
 <script>
   const TRACK_URL = 'https://soundcloud.com/omar-courtz/por-si-manana-no-estoy';
   const START_SECONDS = 80; // 1:20
-  const START_MS = START_SECONDS * 1000; // SoundCloud también pide milisegundos
+  const START_MS = START_SECONDS * 1000 + 400; // SoundCloud también pide milisegundos
   let widget = null;
   let widgetReady = false;
   const iframeEl = document.getElementById('sc-widget');
