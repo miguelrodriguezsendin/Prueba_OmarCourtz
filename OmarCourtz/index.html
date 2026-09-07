@@ -77,7 +77,7 @@
   #playButton:active { transform: scale(0.97); }
   #playButton.hidden { display: none; }
 
-  /* El reproductor de Spotify se muestra pequeño abajo, solo tras dar play */
+  /* El reproductor de SoundCloud se muestra pequeño abajo, solo tras dar play */
   #embed-wrap {
     position: fixed;
     left: 0;
@@ -113,68 +113,54 @@
     <button id="playButton">▶ Reproducir</button>
 
     <p id="fallback" style="display:none;">
-      ¿No suena? <a id="fallbackLink" href="#" target="_blank" rel="noopener">Ábrela en Spotify</a>
+      ¿No suena? <a id="fallbackLink" href="https://soundcloud.com/omar-courtz/por-si-manana-no-estoy" target="_blank" rel="noopener">Ábrela en SoundCloud</a>
       (tendrás que adelantar manualmente hasta 1:20)
     </p>
   </div>
 
   <div id="embed-wrap">
-    <div id="embed-iframe"></div>
+    <iframe id="sc-widget"
+      width="100%" height="80" scrolling="no" frameborder="no"
+      allow="autoplay"
+      src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fomar-courtz%2Fpor-si-manana-no-estoy&color=%231db954&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false">
+    </iframe>
   </div>
 
+<script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
-  const TRACK_URI = 'spotify:track:5FIvygEAeCSTFO6lY3Cda0';
-  const TRACK_URL = 'https://open.spotify.com/track/5FIvygEAeCSTFO6lY3Cda0';
-  const START_SECONDS = 80;           // 1:20
-  const START_MS = START_SECONDS * 1000; // la API pide milisegundos
+  const TRACK_URL = 'https://soundcloud.com/omar-courtz/por-si-manana-no-estoy';
+  const START_SECONDS = 80; // 1:20
+  const START_MS = START_SECONDS * 1000; // SoundCloud también pide milisegundos
 
-  let EmbedController = null;
-  let apiReady = false;
+  let widget = null;
+  let widgetReady = false;
 
-  window.onSpotifyIframeApiReady = (IFrameAPI) => {
-    apiReady = true;
-    const element = document.getElementById('embed-iframe');
-    const options = { width: '100%', height: 80, uri: TRACK_URI };
-    IFrameAPI.createController(element, options, (controller) => {
-      EmbedController = controller;
-    });
-  };
+  const iframeEl = document.getElementById('sc-widget');
+  widget = SC.Widget(iframeEl);
+  widget.bind(SC.Widget.Events.READY, () => { widgetReady = true; });
 
-  // Si el script de Spotify no carga (bloqueado, sin red, etc.) en unos segundos,
-  // mostramos el enlace de respaldo a Spotify.
+  // Si el widget no se confirma "listo" en unos segundos (bloqueado, sin red...),
+  // mostramos el enlace de respaldo.
   setTimeout(() => {
-    if (!apiReady) mostrarFallback();
-  }, 4000);
+    if (!widgetReady) mostrarFallback();
+  }, 5000);
 
   function mostrarFallback() {
-    document.getElementById('fallbackLink').href = TRACK_URL + '#' +
-      Math.floor(START_SECONDS / 60) + ':' + String(START_SECONDS % 60).padStart(2, '0');
     document.getElementById('fallback').style.display = 'block';
   }
 
   document.getElementById('playButton').addEventListener('click', () => {
-    if (!EmbedController) {
+    if (!widgetReady) {
       mostrarFallback();
       window.open(TRACK_URL, '_blank');
       return;
     }
-    // loadUri admite opciones con la posición inicial exacta en ms,
-    // así no dependemos de esperar "a ojo" a que cargue el track.
-    EmbedController.loadUri(TRACK_URI);
-    EmbedController.addListener('playback_update', function onUpdate(e) {
-      // en cuanto el reproductor confirma que hay datos cargados, buscamos y reproducimos
-      if (e.data.duration > 0) {
-        EmbedController.removeListener('playback_update', onUpdate);
-        EmbedController.seek(START_MS);
-        EmbedController.play();
-      }
-    });
+    widget.seekTo(START_MS);
+    widget.play();
 
     document.getElementById('playButton').classList.add('hidden');
     document.getElementById('embed-wrap').classList.add('visible');
   });
 </script>
-
-<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 </body>
 </html>
