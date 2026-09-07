@@ -15,8 +15,6 @@
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
   }
-
-  /* Fondo a pantalla completa */
   .bg {
     position: fixed;
     inset: 0;
@@ -29,9 +27,8 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.45); /* oscurece un poco para que se lea el texto */
+    background: rgba(0,0,0,0.45);
   }
-
   .container {
     height: 100%;
     height: 100dvh;
@@ -44,8 +41,8 @@
     padding: 20px;
     padding-top: max(20px, env(safe-area-inset-top));
     padding-bottom: max(20px, env(safe-area-inset-bottom));
+    cursor: pointer;
   }
-
   h1 {
     font-size: clamp(22px, 5vw, 34px);
     margin: 0 0 6px;
@@ -56,8 +53,6 @@
     margin: 0 0 40px;
     text-shadow: 0 1px 6px rgba(0,0,0,0.7);
   }
-
-  /* El reproductor de SoundCloud se muestra pequeño abajo en cuanto suena */
   #embed-wrap {
     position: fixed;
     left: 0;
@@ -75,14 +70,13 @@
 </style>
 </head>
 <body>
-
   <div class="bg"></div>
-
-  <div class="container">
+  <!-- El propio contenedor central hace de botón de "play": el primer toque cuenta
+       como interacción del usuario y desbloquea el autoplay del navegador -->
+  <div class="container" id="start-layer">
     <h1>POR SI MAÑANA NO ESTOY</h1>
-    <p class="subtitle">Omar Courtz · empieza en 1:20</p>
+    <p class="subtitle">Omar Courtz · toca para escuchar (empieza en 1:20)</p>
   </div>
-
   <div id="embed-wrap">
     <iframe id="sc-widget"
       width="100%" height="80" scrolling="no" frameborder="no"
@@ -93,31 +87,43 @@
 
 <script src="https://w.soundcloud.com/player/api.js"></script>
 <script>
-  const TRACK_URL = 'https://soundcloud.com/omar-courtz/por-si-manana-no-estoy';
   const START_SECONDS = 80; // 1:20
-  const START_MS = START_SECONDS * 1000; // SoundCloud también pide milisegundos
-
-  let widget = null;
-  let widgetReady = false;
+  const START_MS = START_SECONDS * 1000;
 
   const iframeEl = document.getElementById('sc-widget');
-  widget = SC.Widget(iframeEl);
+  const startLayer = document.getElementById('start-layer');
+  const widget = SC.Widget(iframeEl);
 
-  widget.bind(SC.Widget.Events.PLAY, () => {
-    document.getElementById('embed-wrap').classList.add('visible');
-  });
+  let widgetReady = false;
+  let seeked = false;
 
   widget.bind(SC.Widget.Events.READY, () => {
     widgetReady = true;
-    widget.seekTo(START_MS);
-    widget.play();
+    // Si el usuario ya tocó antes de que el widget estuviera listo, arrancamos ya
+    if (startLayer.dataset.tapped === '1') startPlayback();
   });
 
-  // Si el widget de SoundCloud ni siquiera confirma "listo" (bloqueado, sin red...),
-  // abrimos la canción directamente en SoundCloud como último recurso.
-  setTimeout(() => {
-    if (!widgetReady) window.open(TRACK_URL, '_blank');
-  }, 5000);
+  widget.bind(SC.Widget.Events.PLAY, () => {
+    document.getElementById('embed-wrap').classList.add('visible');
+    // seekTo solo funciona de forma fiable una vez ya empezó a sonar,
+    // así que saltamos al minuto 1:20 justo al primer PLAY
+    if (!seeked) {
+      seeked = true;
+      widget.seekTo(START_MS);
+    }
+  });
+
+  function startPlayback() {
+    startLayer.style.display = 'none';
+    if (widgetReady) {
+      widget.play();
+    } else {
+      startLayer.dataset.tapped = '1'; // se reproducirá en cuanto el widget avise READY
+    }
+  }
+
+  // Primer toque/clic en cualquier parte de la pantalla = "play"
+  startLayer.addEventListener('click', startPlayback, { once: true });
 </script>
 </body>
 </html>
